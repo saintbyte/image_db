@@ -1,0 +1,17 @@
+venv
+__pycache__
+*.pyc
+*.sqlite*
+.env
+.token
+1.csv
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/ya_disk_list.iml
+*_*/*.jpg
+*_*/*.JPG
+1.sqlite3
+1.sqllite
+1.db
