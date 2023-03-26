@@ -35,9 +35,10 @@ class Sqllite3ImageRepository():
         cursor.execute(sqlite_select_query)
         record = cursor.fetchall()
         print("Версия базы данных SQLite: ", record)
-        sql: str = "select 'table' from sqlite_master where type = 'table'"
+        sql: str = "select * from sqlite_master where type = 'table'"
         cursor.execute(sql)
         tables = cursor.fetchall()
+        tables = [table[0] for table in tables]
         print(tables)
         if self._image_db_table not in tables:
             self._create_db()
