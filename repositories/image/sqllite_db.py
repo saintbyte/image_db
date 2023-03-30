@@ -4,22 +4,25 @@ import sqlite3
 
 class Sqllite3ImageRepository():
     _default_ext = ".sqllite3"
-    _allowed_sqllite_file_ext = [".sqllite",
-                                 ".db",
-                                 ".sqllite3"
-                                 ]
+    _allowed_sqllite_file_ext = [
+        ".sqllite",
+        ".db",
+        ".sqllite3"
+    ]
     _image_db_table = "image_db"
 
     def _normalization_db_filename(self, db_file: str) -> str:
         has_allowed_ext: bool = False
         for ext in self._allowed_sqllite_file_ext:
-            if db_file.endswith(ext):
+            if db_file.endswith(ext.lower()):
                 has_allowed_ext = True
+                break
         if not has_allowed_ext:
-            db_file = f"db_file{self._default_ext}"
+            db_file = f"{db_file}{self._default_ext}"
         return db_file
 
     def __init__(self, db_file: str):
+        db_file = self._normalization_db_filename(db_file)
         try:
             self._connection: sqlite3.Connection = sqlite3.connect(db_file)
         except sqlite3.Error as e:
@@ -37,17 +40,14 @@ class Sqllite3ImageRepository():
         print("Версия базы данных SQLite: ", record)
         sql: str = "select * from sqlite_master where type = 'table'"
         cursor.execute(sql)
-        tables = cursor.fetchall()
-        tables = [table[0] for table in tables]
-        print(tables)
+        tables = [table[1] for table in cursor.fetchall()]
         if self._image_db_table not in tables:
             self._create_db()
-
         cursor.close()
 
     def _create_db(self):
         cursor = self._connection.cursor()
-        sql_create_image_db:str = f"""create table {self._image_db_table}
+        sql_create_image_db: str = f"""create table {self._image_db_table}
         (
             path   TEXT,
             width  integer,
@@ -57,6 +57,6 @@ class Sqllite3ImageRepository():
         );
         """
         cursor.execute(sql_create_image_db)
-        sql_index_image_db:str = f"create index {self._image_db_table}_hash_index on image_db(hash);"
+        sql_index_image_db: str = f"create index {self._image_db_table}_hash_index on image_db(hash);"
         cursor.execute(sql_index_image_db)
         cursor.close()

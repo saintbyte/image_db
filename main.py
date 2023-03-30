@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import argparse
-from repositories.image import Sqllite3ImageRepository
+import pathlib
+
+from repositories.image.files import ImageFilesRepository
+from repositories.image.sqllite_db import Sqllite3ImageRepository
 
 from dotenv import load_dotenv
 
@@ -31,7 +34,10 @@ def main():
     db_file: str = args.db[0]
 
     image_db = Sqllite3ImageRepository(db_file)
-
+    path = pathlib.Path(args.path[0])
+    images = ImageFilesRepository(path)
+    for file in images.get_list():
+        print(file)
 
 
 
