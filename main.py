@@ -2,18 +2,18 @@
 import argparse
 import pathlib
 
-from repositories.image.files import ImageFilesRepository
-from repositories.image.sqllite_db import Sqllite3ImageRepository
-
 from dotenv import load_dotenv
 
+from repositories.image.files import ImageFilesRepository
+from repositories.image.sqllite_db import Sqllite3ImageRepository
+from repositories.image.sqllite_db import Sqllite3ImageRepositoryExistsException
 load_dotenv()
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="main.py",
-        description="Create database of image files",
+        description='Create database of image files',
         epilog="may The Force be with you!",
     )
     parser.add_argument(
@@ -37,7 +37,11 @@ def main():
     path = pathlib.Path(args.path[0])
     images = ImageFilesRepository(path)
     for file in images.get_list():
-        print(file)
+        try:
+            image_db.add(file)
+        except Sqllite3ImageRepositoryExistsException:
+            print(f"{file} is exists in database")
+
 
 
 

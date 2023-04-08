@@ -1,6 +1,20 @@
 import pathlib
 import sqlite3
 
+from PIL import Image
+
+from utils.hash import hash_image
+
+Image.MAX_IMAGE_PIXELS = None
+
+
+class Sqllite3ImageRepositoryExistsException(Exception):
+    pass
+
+
+class Sqllite3ImageRepositoryNotImageOrReadException(Exception):
+    pass
+
 
 class Sqllite3ImageRepository():
     _default_ext = ".sqllite3"
@@ -22,9 +36,9 @@ class Sqllite3ImageRepository():
         return db_file
 
     def __init__(self, db_file: str):
-        db_file = self._normalization_db_filename(db_file)
+        self.db_file = self._normalization_db_filename(db_file)
         try:
-            self._connection: sqlite3.Connection = sqlite3.connect(db_file)
+            self._connection: sqlite3.Connection = sqlite3.connect(self.db_file)
         except sqlite3.Error as e:
             if not self._connection:
                 return
@@ -47,7 +61,7 @@ class Sqllite3ImageRepository():
 
     def _create_db(self):
         cursor = self._connection.cursor()
-        sql_create_image_db: str = f"""create table {self._image_db_table}
+        sql_create_image_db: str = f"""create table IF NOT EXISTS  {self._image_db_table}
         (
             path   TEXT,
             width  integer,
@@ -57,6 +71,43 @@ class Sqllite3ImageRepository():
         );
         """
         cursor.execute(sql_create_image_db)
-        sql_index_image_db: str = f"create index {self._image_db_table}_hash_index on image_db(hash);"
+        sql_index_image_db: str = f"create index IF NOT EXISTS  {self._image_db_table}_hash_index on image_db(hash);"
         cursor.execute(sql_index_image_db)
         cursor.close()
+
+    @staticmethod
+    def _get_image_size(file_path):
+        with Image.open(file_path) as img:
+            width, height = img.size
+        return width, height
+
+    @staticmethod
+    def _get_file_size(image_path):
+        return image_path.stat().st_size
+
+    def add(self, image_path: pathlib.Path):
+        print(image_path)
+        cursor = self._connection.cursor()
+        try:
+            width, height = Sqllite3ImageRepository._get_image_size(image_path)
+        except Image.DecompressionBombError:
+            print("Big image")
+            raise Sqllite3ImageRepositoryNotImageOrReadException
+        size = Sqllite3ImageRepository._get_file_size(image_path)
+        hash_obj = hash_image(image_path)
+        sql = f"""INSERT INTO {self._image_db_table} 
+            (
+                 path,
+                 width,
+                 height,
+                 size,
+                 hash
+        ) VALUES (?, ?, ?, ?, ?)"""
+        cursor.execute(sql,  (
+                           image_path.as_posix(),
+                           width,
+                           height,
+                           size,
+                           str(hash_obj)
+                       ))
+        self._connection.commit()
