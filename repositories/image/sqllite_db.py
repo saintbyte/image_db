@@ -1,9 +1,9 @@
 import pathlib
 import sqlite3
-
+import PIL
 from PIL import Image
 
-from utils.hash import hash_image
+from utils.hash import hash_image, hash_md5_file
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -16,7 +16,8 @@ class Sqllite3ImageRepositoryNotImageOrReadException(Exception):
     pass
 
 
-class Sqllite3ImageRepository():
+class Sqllite3ImageRepository:
+    """ Репозиторий для путей к картинкам в виде БД """
     _default_ext = ".sqllite3"
     _allowed_sqllite_file_ext = [
         ".sqllite",
@@ -64,6 +65,7 @@ class Sqllite3ImageRepository():
         sql_create_image_db: str = f"""create table IF NOT EXISTS  {self._image_db_table}
         (
             path   TEXT,
+            file_hash   TEXT,
             width  integer,
             height integer,
             size   integer,
@@ -90,21 +92,26 @@ class Sqllite3ImageRepository():
         cursor = self._connection.cursor()
         try:
             width, height = Sqllite3ImageRepository._get_image_size(image_path)
-        except Image.DecompressionBombError:
-            print("Big image")
+        except Image.DecompressionBombError as e:
             raise Sqllite3ImageRepositoryNotImageOrReadException
+        except PIL.UnidentifiedImageError as e:
+            raise Sqllite3ImageRepositoryNotImageOrReadException
+
         size = Sqllite3ImageRepository._get_file_size(image_path)
         hash_obj = hash_image(image_path)
+        md5_hash = hash_md5_file(image_path)
         sql = f"""INSERT INTO {self._image_db_table} 
             (
                  path,
+                 file_hash, 
                  width,
                  height,
                  size,
                  hash
-        ) VALUES (?, ?, ?, ?, ?)"""
+        ) VALUES (?, ?, ?, ?, ?, ?)"""
         cursor.execute(sql,  (
                            image_path.as_posix(),
+                           md5_hash,
                            width,
                            height,
                            size,
