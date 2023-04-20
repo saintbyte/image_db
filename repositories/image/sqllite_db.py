@@ -2,10 +2,19 @@ import pathlib
 import sqlite3
 import PIL
 from PIL import Image
+from enum import Enum
 
 from utils.hash import hash_image, hash_md5_file
 
 Image.MAX_IMAGE_PIXELS = None
+
+
+class ImageStatus(Enum):
+    NEW = 0
+    READY_TO_WORK = 1
+    SEND_TO_WORK = 2
+    AFTER_WORK = 2
+    IGNORED = 2
 
 
 class Sqllite3ImageRepositoryExistsException(Exception):
@@ -16,15 +25,14 @@ class Sqllite3ImageRepositoryNotImageOrReadException(Exception):
     pass
 
 
-class Sqllite3ImageRepository:
-    """ Репозиторий для путей к картинкам в виде БД """
+class Sqllite3RepositoryBase():
+    """Базовый класс для работы sqllite3 как хранилищем"""
     _default_ext = ".sqllite3"
     _allowed_sqllite_file_ext = [
         ".sqllite",
         ".db",
         ".sqllite3"
     ]
-    _image_db_table = "image_db"
 
     def _normalization_db_filename(self, db_file: str) -> str:
         has_allowed_ext: bool = False
@@ -46,19 +54,15 @@ class Sqllite3ImageRepository:
             self._connection.close()
             print(f"Error on open database file: {e}")
             quit()
-        cursor = self._connection.cursor()
-        print("База данных создана и успешно подключена к SQLite")
+        self._create_db()
 
-        sqlite_select_query = "select sqlite_version();"
-        cursor.execute(sqlite_select_query)
-        record = cursor.fetchall()
-        print("Версия базы данных SQLite: ", record)
-        sql: str = "select * from sqlite_master where type = 'table'"
-        cursor.execute(sql)
-        tables = [table[1] for table in cursor.fetchall()]
-        if self._image_db_table not in tables:
-            self._create_db()
-        cursor.close()
+    def _create_db(self):
+        raise NotImplemented
+
+
+class Sqllite3ImageRepository(Sqllite3RepositoryBase):
+    """ Репозиторий для путей к картинкам в виде БД """
+    _image_db_table = "image_db"
 
     def _create_db(self):
         cursor = self._connection.cursor()
@@ -69,7 +73,9 @@ class Sqllite3ImageRepository:
             width  integer,
             height integer,
             size   integer,
-            hash   TEXT
+            hash   TEXT,
+            dataset_name TEXT,
+            status integer
         );
         """
         cursor.execute(sql_create_image_db)
@@ -107,14 +113,19 @@ class Sqllite3ImageRepository:
                  width,
                  height,
                  size,
-                 hash
-        ) VALUES (?, ?, ?, ?, ?, ?)"""
-        cursor.execute(sql,  (
-                           image_path.as_posix(),
-                           md5_hash,
-                           width,
-                           height,
-                           size,
-                           str(hash_obj)
-                       ))
+                 hash,
+                 dataset_name,
+                 status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        cursor.execute(sql, (
+            image_path.as_posix(),
+            md5_hash,
+            width,
+            height,
+            size,
+            str(hash_obj),
+            "",
+            ImageStatus.NEW
+        ))
         self._connection.commit()
