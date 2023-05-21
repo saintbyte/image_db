@@ -10,6 +10,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 class ImageStatus(Enum):
+    """Статус изображений в базе"""
     NEW = 0
     MOVE_TO_DATASET_PATH = 100
     REMOVE_IN_DATASET_PATH = 200
@@ -20,6 +21,7 @@ class ImageStatus(Enum):
 
 
 class Duplicates(Enum):
+    """Дубликаты изображений"""
     BY_FILE_HASH = 1
     BY_IMAGE_HASH = 2
     WRONG = 3
@@ -73,12 +75,14 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     """ Репозиторий для путей к картинкам в виде БД """
     _image_db_table = "image_db"
     _settings_table = "settings"
+    _duplicates_table = "duplicates"
 
     def create_db(self):
-        self.create_images_paths_tables()
-        self.create_settings_tables()
+        self._create_images_paths_tables()
+        self._create_settings_tables()
+        self._create_duplicates_tables()
 
-    def create_images_paths_tables(self):
+    def _create_images_paths_tables(self):
         cursor = self._connection.cursor()
         sql_images_paths_table: str = f"""create table IF NOT EXISTS  {self._image_db_table}
         (
@@ -97,7 +101,7 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
         cursor.execute(sql_index_image_db)
         cursor.close()
 
-    def create_settings_tables(self):
+    def _create_settings_tables(self):
         cursor = self._connection.cursor()
         sql_settings_table: str = f"""create table IF NOT EXISTS  {self._settings_table}
                (
@@ -106,6 +110,19 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
                );
                """
         cursor.execute(sql_settings_table)
+        cursor.close()
+
+    def _create_duplicates_tables(self):
+        cursor = self._connection.cursor()
+        """
+        sql_settings_table: str = f"" "create table IF NOT EXISTS  {self._duplicates_table}
+            (
+                parameter   TEXT,
+                value   TEXT
+            );
+            "" "
+        cursor.execute(sql_settings_table)
+        """
         cursor.close()
 
     @staticmethod
