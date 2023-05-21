@@ -12,7 +12,7 @@ load_dotenv()
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="main.py",
+        prog="collect.py",
         description='Create database of image files',
         epilog="may The Force be with you!",
     )

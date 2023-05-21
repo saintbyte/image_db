@@ -11,10 +11,12 @@ Image.MAX_IMAGE_PIXELS = None
 
 class ImageStatus(Enum):
     NEW = 0
-    READY_TO_WORK = 1
-    SEND_TO_WORK = 2
-    AFTER_WORK = 2
-    IGNORED = 2
+    MOVE_TO_DATASET_PATH = 100
+    REMOVE_IN_DATASET_PATH = 200
+    READY_TO_WORK = 300
+    SEND_TO_WORK = 400
+    AFTER_WORK = 500
+    IGNORED = 600
 
 
 class Sqllite3ImageRepositoryExistsException(Exception):
@@ -54,19 +56,25 @@ class Sqllite3RepositoryBase():
             self._connection.close()
             print(f"Error on open database file: {e}")
             quit()
-        self._create_db()
+        self.create_db()
 
-    def _create_db(self):
+    def create_db(self):
+        """Функция, где создаются таблицы в базе"""
         raise NotImplemented
 
 
 class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     """ Репозиторий для путей к картинкам в виде БД """
     _image_db_table = "image_db"
+    _settings_table = "settings"
 
-    def _create_db(self):
+    def create_db(self):
+        self.create_images_paths_tables()
+        self.create_settings_tables()
+
+    def create_images_paths_tables(self):
         cursor = self._connection.cursor()
-        sql_create_image_db: str = f"""create table IF NOT EXISTS  {self._image_db_table}
+        sql_images_paths_table: str = f"""create table IF NOT EXISTS  {self._image_db_table}
         (
             path   TEXT,
             file_hash   TEXT,
@@ -78,9 +86,20 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
             status integer
         );
         """
-        cursor.execute(sql_create_image_db)
+        cursor.execute(sql_images_paths_table)
         sql_index_image_db: str = f"create index IF NOT EXISTS  {self._image_db_table}_hash_index on image_db(hash);"
         cursor.execute(sql_index_image_db)
+        cursor.close()
+
+    def create_settings_tables(self):
+        cursor = self._connection.cursor()
+        sql_settings_table: str = f"""create table IF NOT EXISTS  {self._settings_table}
+               (
+                   parameter   TEXT,
+                   value   TEXT
+               );
+               """
+        cursor.execute(sql_settings_table)
         cursor.close()
 
     @staticmethod
@@ -126,6 +145,6 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
             size,
             str(hash_obj),
             "",
-            ImageStatus.NEW
+            ImageStatus.NEW.value,
         ))
         self._connection.commit()
