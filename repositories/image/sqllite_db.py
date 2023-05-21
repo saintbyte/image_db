@@ -19,6 +19,12 @@ class ImageStatus(Enum):
     IGNORED = 600
 
 
+class Duplicates(Enum):
+    BY_FILE_HASH = 1
+    BY_IMAGE_HASH = 2
+    WRONG = 3
+
+
 class Sqllite3ImageRepositoryExistsException(Exception):
     pass
 
