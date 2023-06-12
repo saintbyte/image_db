@@ -37,11 +37,13 @@ class Sqllite3ImageRepositoryNotImageOrReadException(Exception):
 
 class Sqllite3RepositoryBase():
     """Базовый класс для работы sqllite3 как хранилищем"""
-    _default_ext = ".sqllite3"
+    _default_ext = ".sqlite3"
     _allowed_sqllite_file_ext = [
         ".sqllite",
+        ".sqlite",
         ".db",
         ".sqllite3"
+        ".sqlite3",
     ]
 
     def _normalization_db_filename(self, db_file: str) -> str:
@@ -54,7 +56,8 @@ class Sqllite3RepositoryBase():
             db_file = f"{db_file}{self._default_ext}"
         return db_file
 
-    def __init__(self, db_file: str):
+    def __init__(self, db_file: str, create: bool = True):
+
         self.db_file = self._normalization_db_filename(db_file)
         try:
             self._connection: sqlite3.Connection = sqlite3.connect(self.db_file)
@@ -64,7 +67,8 @@ class Sqllite3RepositoryBase():
             self._connection.close()
             print(f"Error on open database file: {e}")
             quit()
-        self.create_db()
+        if create:
+            self.create_db()
 
     def create_db(self):
         """Функция, где создаются таблицы в базе"""
@@ -73,6 +77,7 @@ class Sqllite3RepositoryBase():
 
 class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     """ Репозиторий для путей к картинкам в виде БД """
+    version="1"
     _image_db_table = "image_db"
     _settings_table = "settings"
     _duplicates_table = "duplicates"
