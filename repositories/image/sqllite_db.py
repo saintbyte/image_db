@@ -87,6 +87,19 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
         self._create_settings_tables()
         self._create_duplicates_tables()
 
+    def is_image_fb(self) -> bool:
+        cursor = self._connection.cursor()
+        sql_query = """
+            SELECT 
+              * 
+            FROM 
+              sqlite_master  
+            WHERE 
+              type='table';
+        """
+        cursor.execute(sql_query)
+        return False
+
     def _create_images_paths_tables(self):
         cursor = self._connection.cursor()
         sql_images_paths_table: str = f"""create table IF NOT EXISTS  {self._image_db_table}

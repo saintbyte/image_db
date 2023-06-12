@@ -1,11 +1,16 @@
-from tkinter import *
+#!/usr/bin/env python3
+
+from dotenv import load_dotenv
+
+from repositories.image.sqllite_db import Sqllite3ImageRepository
+
 from tkinter import Tk, Frame, Menu
-from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
-class Application(Frame):
+load_dotenv()
 
+class Application(Frame):
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -34,6 +39,16 @@ class Application(Frame):
             title='Selected Files',
             message=filename
         )
+        if not filename:
+            return
+        image_db = Sqllite3ImageRepository(filename, False)
+        if not image_db.is_image_fb():
+            showinfo(
+                title='Selected Files',
+                message="Its not image db"
+            )
+
+
     def onExit(self):
         self.quit()
 
