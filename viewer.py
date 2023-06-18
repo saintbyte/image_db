@@ -4,13 +4,18 @@ from dotenv import load_dotenv
 
 from repositories.image.sqllite_db import Sqllite3ImageRepository
 
-from tkinter import Tk, Frame, Menu
+from tkinter import Tk, Frame, Menu, Button, N, S
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
+from PIL import ImageTk, Image
 
 load_dotenv()
 
+
 class Application(Frame):
+    image_area = None
+    control_area = None
+
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -24,9 +29,16 @@ class Application(Frame):
         fileMenu.add_command(label="Выход", command=self.onExit)
         menubar.add_cascade(label="Файл", menu=fileMenu)
 
+        self.image_area = Frame(self.master, background="red")
+        self.image_area.place(relx=0.0, rely=0.0, relheight=0.8, relwidth=1)
+        self.control_area = Frame(self.master,  background="green", height=140)
+        self.control_area.place(relx=0.0, rely=0.8, relheight=1, relwidth=1)
+        Button(self.control_area, text='Back', command=self.Back, bg='light blue').place(x=230, y=40)
+        Button(self.control_area, text='Next', command=self.Next, bg='light blue').place(x=1000, y=40)
+
     def openImageDBFile(self):
         filetypes = (
-            ('sqlite databases', '*.sqlite*'),
+            ('sqlite databases', '*.sqlite?'),
             ('All files', '*.*')
         )
         filename = fd.askopenfilename(
@@ -47,10 +59,17 @@ class Application(Frame):
                 title='Selected Files',
                 message="Its not image db"
             )
-
+            return
 
     def onExit(self):
         self.quit()
+
+    def Back(self):
+        pass
+
+    def Next(self):
+        pass
+
 
 
 def main():

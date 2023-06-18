@@ -42,7 +42,7 @@ class Sqllite3RepositoryBase():
         ".sqllite",
         ".sqlite",
         ".db",
-        ".sqllite3"
+        ".sqllite3",
         ".sqlite3",
     ]
 
@@ -90,15 +90,33 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     def is_image_fb(self) -> bool:
         cursor = self._connection.cursor()
         sql_query = """
-            SELECT 
-              * 
-            FROM 
-              sqlite_master  
-            WHERE 
-              type='table';
+             SELECT 
+                 name 
+             FROM 
+                 sqlite_master
+             WHERE
+                 type='table';
         """
         cursor.execute(sql_query)
+        tables: list = [row[0] for row in cursor.fetchall()]
+        all_tables: list = self._all_tables()
+        tables_result: list = []
+        for table in all_tables:
+            if table in tables:
+                tables_result.append(True)
+                continue
+            tables_result.append(False)
+        cursor.close()
+        if all(tables_result):
+            return True
         return False
+
+    def _all_tables(self):
+        return [
+            self._image_db_table,
+            # self._settings_table,
+            #self._duplicates_table
+        ]
 
     def _create_images_paths_tables(self):
         cursor = self._connection.cursor()
