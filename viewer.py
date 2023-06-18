@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from repositories.image.sqllite_db import Sqllite3ImageRepository
 
-from tkinter import Tk, Frame, Menu, Button, N, S
+from tkinter import Tk, Frame, Menu, Button, Label
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 from PIL import ImageTk, Image
@@ -13,6 +13,7 @@ load_dotenv()
 
 
 class Application(Frame):
+    image = None
     image_area = None
     control_area = None
 
@@ -31,6 +32,10 @@ class Application(Frame):
 
         self.image_area = Frame(self.master, background="red")
         self.image_area.place(relx=0.0, rely=0.0, relheight=0.8, relwidth=1)
+        img = ImageTk.PhotoImage(Image.open("/home/sb/projects/ya_disk_list/dataset/1/2800_2900/DSCF9364 (2).JPG"))
+        self.image = Label(self.image_area, text="12312")
+        #self.image.place(relx=0, rely=0, relheight=1, relwidth=1)
+        #self.image.pack()
         self.control_area = Frame(self.master,  background="green", height=140)
         self.control_area.place(relx=0.0, rely=0.8, relheight=1, relwidth=1)
         Button(self.control_area, text='Back', command=self.Back, bg='light blue').place(x=230, y=40)
