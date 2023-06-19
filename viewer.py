@@ -32,10 +32,13 @@ class Application(Frame):
 
         self.image_area = Frame(self.master, background="red")
         self.image_area.place(relx=0.0, rely=0.0, relheight=0.8, relwidth=1)
-        img = ImageTk.PhotoImage(Image.open("/home/sb/projects/ya_disk_list/dataset/1/2800_2900/DSCF9364 (2).JPG"))
-        self.image = Label(self.image_area, text="12312")
-        #self.image.place(relx=0, rely=0, relheight=1, relwidth=1)
-        #self.image.pack()
+        img = ImageTk.PhotoImage(Image.open("/home/sb/projects/ya_disk_list/dataset/1/3400_3500/420283681272736676_35852537.jpg"))
+        #self.image = Label(self.image_area, text="12312") # , image=img
+        self.image = Label(self.image_area, image=img)
+        self.image.pack()
+        self.image.image = img
+        self.image.place(relx=0, rely=0, relheight=1, relwidth=1)
+
         self.control_area = Frame(self.master,  background="green", height=140)
         self.control_area.place(relx=0.0, rely=0.8, relheight=1, relwidth=1)
         Button(self.control_area, text='Back', command=self.Back, bg='light blue').place(x=230, y=40)
