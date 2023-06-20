@@ -1,8 +1,10 @@
 import pathlib
 import sqlite3
+from enum import Enum
+from typing import Optional
+
 import PIL
 from PIL import Image
-from enum import Enum
 
 from utils.hash import hash_image, hash_md5_file
 
@@ -46,6 +48,12 @@ class Sqllite3RepositoryBase():
         ".sqlite3",
     ]
 
+    def dict_factory(self, cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return d
+
     def _normalization_db_filename(self, db_file: str) -> str:
         has_allowed_ext: bool = False
         for ext in self._allowed_sqllite_file_ext:
@@ -77,7 +85,7 @@ class Sqllite3RepositoryBase():
 
 class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     """ Репозиторий для путей к картинкам в виде БД """
-    version="1"
+    version = "1"
     _image_db_table = "image_db"
     _settings_table = "settings"
     _duplicates_table = "duplicates"
@@ -115,7 +123,7 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
         return [
             self._image_db_table,
             # self._settings_table,
-            #self._duplicates_table
+            # self._duplicates_table
         ]
 
     def _create_images_paths_tables(self):
@@ -172,7 +180,6 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
         return image_path.stat().st_size
 
     def add(self, image_path: pathlib.Path):
-        print(image_path)
         cursor = self._connection.cursor()
         try:
             width, height = Sqllite3ImageRepository._get_image_size(image_path)
@@ -207,3 +214,14 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
             ImageStatus.NEW.value,
         ))
         self._connection.commit()
+
+    def get_first_image(self) -> Optional[dict]:
+        self._connection.row_factory = self.dict_factory
+        cursor = self._connection.cursor()
+        sql_query = f"""
+             SELECT * FROM {self._image_db_table} ORDER BY ROWID LIMIT 1
+        """
+        cursor.execute(sql_query)
+        result = cursor.fetchone()
+        cursor.close()
+        return result
