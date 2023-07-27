@@ -86,6 +86,7 @@ class Sqllite3RepositoryBase():
 class Sqllite3ImageRepository(Sqllite3RepositoryBase):
     """ Репозиторий для путей к картинкам в виде БД """
     version = "1"
+    current_rowid: Optional[int]=None
     _image_db_table = "image_db"
     _settings_table = "settings"
     _duplicates_table = "duplicates"
@@ -215,13 +216,58 @@ class Sqllite3ImageRepository(Sqllite3RepositoryBase):
         ))
         self._connection.commit()
 
-    def get_first_image(self) -> Optional[dict]:
+    def get_images(self, *, direction: Optional[str] = None, first: bool = False ) -> Optional[dict]:
         self._connection.row_factory = self.dict_factory
         cursor = self._connection.cursor()
         sql_query = f"""
-             SELECT * FROM {self._image_db_table} ORDER BY ROWID LIMIT 1
+                    SELECT 
+                        ROWID,
+                        path,
+                        file_hash, 
+                        width,
+                        height,
+                        size,
+                        hash,
+                        dataset_name,
+                        status
+                    FROM 
+                        {self._image_db_table}
         """
+        if direction == "next":
+            sql_query = f"""
+                {sql_query} 
+                WHERE 
+                    ROWID>{self.current_rowid}
+                ORDER BY 
+                    ROWID  
+            """
+        if direction == "prev":
+            sql_query = f"""
+                {sql_query} 
+                WHERE 
+                    ROWID<{self.current_rowid}
+                ORDER BY 
+                    ROWID DESC
+            """
+        if first:
+            sql_query = f"""{sql_query}
+                    ORDER BY 
+                        ROWID 
+            """
+        sql_query = f"""{sql_query} LIMIT 1"""
         cursor.execute(sql_query)
         result = cursor.fetchone()
         cursor.close()
+        if result is None:
+            return None
+        self.current_rowid = result["rowid"]
         return result
+
+    def get_first_image(self) -> Optional[dict]:
+        return self.get_images(first=True)
+
+    def get_next_image(self) -> Optional[dict]:
+        return self.get_images(direction="next")
+
+    def get_prev_image(self) -> Optional[dict]:
+        return self.get_images(direction="prev")
