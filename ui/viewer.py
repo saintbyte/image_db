@@ -29,7 +29,7 @@ class Application(Frame):
     def make_work_are(self):
         self.image_area = Frame(self.master, background="red")
         self.image_area.place(relx=0.0, rely=0.0, relheight=0.8, relwidth=1)
-        self.image = Canvas(self.image_area, background="light green", )
+        self.image = Canvas(self.image_area, background="light green",)
         self.image.place(relx=0, rely=0, relheight=1, relwidth=1)
         self.image.pack(expand=YES, fill=BOTH)
 
